@@ -34,7 +34,6 @@
   },
   "output": {
     "dir": "captures",
-    "save_annotated": true,
-    "save_gif": true
+    "save_annotated": true
   }
 }
