@@ -6,6 +6,11 @@ Mide opacidad por contraste relativo contra zonas limpias de la misma escena y l
 **Smoke plume detection for IP cameras — no GPU, no dataset, no retraining.**
 Relative-contrast opacity measurement against clean reference zones, classified on the Ringelmann scale.
 
+
+![Zona de humo y zonas de referencia anotadas sobre el fotograma analizado](docs/example-annotated.jpg)
+
+<sub>Zona de humo y zonas de referencia anotadas sobre el fotograma analizado · Smoke zone and reference zones annotated on the analyzed frame</sub>
+
 ---
 
 ## El problema
