@@ -1,0 +1,40 @@
+{
+  "camera": {
+    "rtsp_url": "rtsp://CAMERA_HOST:554/Streaming/Channels/101",
+    "isapi_snapshot_url": "http://CAMERA_HOST:80/ISAPI/Streaming/channels/101/picture",
+    "username_env": "CAMERA_USER",
+    "password_env": "CAMERA_PASS",
+    "timeout": 8,
+    "burst_frames": 5,
+    "burst_interval": 0.9
+  },
+  "zones": {
+    "reference_size": [2688, 1520],
+    "plume": [1168, 118, 1239, 525],
+    "reference_a": [1769, 118, 1874, 525],
+    "reference_b": [1008, 42, 1876, 118]
+  },
+  "calibration": {
+    "offset": -15.671429,
+    "slope": 1.257143,
+    "weights": {
+      "luma_gain": 0.5,
+      "sat_loss_ref_a": 0.4,
+      "sat_loss_ref_b": 0.5
+    }
+  },
+  "classification": {
+    "clear_below": 5.0,
+    "gray_from": 40.0,
+    "dark_from": 70.0
+  },
+  "night": {
+    "enabled": true,
+    "mean_luma_below": 85.0
+  },
+  "output": {
+    "dir": "captures",
+    "save_annotated": true,
+    "save_gif": true
+  }
+}

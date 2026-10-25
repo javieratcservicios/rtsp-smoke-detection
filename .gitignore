@@ -1,0 +1,47 @@
+# ─── Configuración real con IPs y credenciales (nunca al repo) ───
+config.json
+*.env
+.env
+!config.example.json
+
+# ─── Capturas y evidencia ───
+captures/
+*.jpg
+*.jpeg
+*.png
+*.gif
+!docs/*.png
+!docs/*.jpg
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# ─── Pruebas ───
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ─── Modelos y binarios si algún día se agregan ───
+*.onnx
+*.pt
+*.pth
+*.h5
+
+# ─── Editores y sistema ───
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ─── Logs ───
+*.log
