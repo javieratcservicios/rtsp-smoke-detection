@@ -179,6 +179,21 @@ Cada medición guarda en `captures/`:
 - **Reajusta las zonas si mueves la cámara.** No hay forma de evitarlo: las coordenadas son de la escena, no del equipo. Si cambias resolución, solo actualiza `reference_size` — las cajas se reescalan solas.
 - **No es un detector certificado.** Sirve para monitoreo continuo y alertamiento temprano. Para cumplimiento normativo con método oficial (EPA Method 9 / opacímetro), esto es un complemento, no un sustituto.
 
+## Antes de usarlo en producción
+
+> **Pruébalo una vez contra tu cámara. No lo des por bueno solo porque las pruebas pasen.**
+
+Las pruebas automatizadas trabajan con imágenes locales: **nunca abren una conexión real**. No cubren el diálogo con la cámara ni la captura en vivo.
+
+La captura por ISAPI y por RTSP está comprobada funcionando correctamente contra una cámara Hikvision real, **pero puede variar si se instala en otro sistema operativo**, con otro modelo o firmware, otro códec o en otra red. OpenCV y el cliente HTTP se comportan distinto entre Linux, Windows y macOS.
+
+Antes de confiar en la alerta:
+
+1. Corre `--snapshot` contra tu cámara y confirma que el fotograma llega y no está en negro.
+2. Dibuja las zonas sobre ese fotograma real: la zona de pluma y las de referencia limpia.
+3. Corre `--calibrate` con una imagen sin humo y una con humo conocido. **Sin calibrar, la clasificación por defecto da falsos positivos.**
+4. Verifica el modo nocturno: si la cámara opera 24 h, la primera medición de la noche debe devolver `NIGHT`, no "despejado".
+
 ## Licencia
 
 MIT — ver [LICENSE](LICENSE).
@@ -203,3 +218,5 @@ python smoke_detect.py --config config.json --measure
 - Automatic night mode: skips contrast analysis when the scene is too dark to be reliable
 
 Not a certified opacity monitor — it's early-warning telemetry for continuous monitoring.
+
+> **Test it once against your camera before relying on it.** The automated tests run on local images and never open a real connection. ISAPI and RTSP capture are verified working against a real Hikvision camera, but behaviour may differ on another operating system, model, firmware, codec or network. Take a snapshot, draw your zones on that real frame, and run `--calibrate` first — the default classifier produces false positives without calibration.
