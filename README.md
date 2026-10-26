@@ -9,7 +9,7 @@ Relative-contrast opacity measurement against clean reference zones, classified 
 
 ![Zona de humo y zonas de referencia anotadas sobre el fotograma analizado](docs/example-annotated.jpg)
 
-<sub>Zona de humo y zonas de referencia anotadas sobre el fotograma analizado · Smoke zone and reference zones annotated on the analyzed frame</sub>
+<sub>Imagen sintética de demostración: zona de pluma y zonas de referencia anotadas · Synthetic demo image: plume and reference zones annotated</sub>
 
 ---
 
@@ -54,19 +54,21 @@ Como la referencia está en la misma imagen, la medida se cancela ante cambios g
 
 ## Clasificación
 
-| Opacidad | Estado | Ringelmann |
-|---|---|---|
-| < 5% | Despejado / sin humo | 0 |
-| 5–40% | Humo claro / blanco | 1 |
-| 40–70% | Humo gris | 2 |
-| > 70% | Humo oscuro / combustión incompleta | 3–4 |
+| Opacidad | Estado (`code`) |
+|---|---|
+| < 5% | Despejado / sin humo (`CLEAR`) |
+| 5–40% | Humo claro / blanco (`LIGHT`) |
+| 40–70% | Humo gris (`GRAY`) |
+| > 70% | Humo oscuro / combustión incompleta (`DARK`) |
+
+El número Ringelmann se reporta aparte con la escala estándar: **cada grado equivale a 20% de opacidad** (1 = 20%, 2 = 40%, 3 = 60%, 4 = 80%, 5 = 100%), redondeado al grado más cercano.
 
 Los umbrales son configurables. La escala Ringelmann es la referencia estándar para evaluar opacidad de plumas en inspecciones ambientales.
 
 ## Instalación
 
 ```bash
-git clone https://github.com/TU_USUARIO/rtsp-smoke-detection.git
+git clone https://github.com/javieratcservicios/rtsp-smoke-detection.git
 cd rtsp-smoke-detection
 pip install -r requirements.txt
 cp config.example.json config.json
@@ -158,6 +160,8 @@ if result:
     print(result["label"], result["opacity"], result["ringelmann"])
     if result["code"] in ("GRAY", "DARK"):
         print("¡Alerta de emisión!")
+    elif result["code"] == "NIGHT":
+        print("Sin medición: escena demasiado oscura")
 ```
 
 ## Salidas
@@ -169,7 +173,7 @@ Cada medición guarda en `captures/`:
 
 ## Notas de operación
 
-- **Modo nocturno automático.** Bajo cierta luminancia media, el análisis de contraste no es fiable y el script devuelve "despejado" con la marca `night: true`. Configurable en `night.enabled` / `night.mean_luma_below`. No lo desactives si la cámara opera 24 h: darás falsas alarmas toda la noche.
+- **Modo nocturno automático.** Bajo cierta luminancia media, el análisis de contraste no es fiable y el script devuelve `code: "NIGHT"` con `opacity: null` — **no** "despejado". Quien consuma la salida debe tratar `NIGHT` como "sin medición", nunca como "sin humo". Configurable en `night.enabled` / `night.mean_luma_below`. No lo desactives si la cámara opera 24 h: darás falsas alarmas toda la noche.
 - **El movimiento no es señal de humo.** `motion` se reporta pero no entra en la clasificación. Un camión pasando genera movimiento y cero opacidad.
 - **Ráfaga, no fotograma único.** El análisis usa varios fotogramas porque un solo JPEG puede caer en un instante de compresión fea. Con 5 fotogramas se promedia el ruido.
 - **Reajusta las zonas si mueves la cámara.** No hay forma de evitarlo: las coordenadas son de la escena, no del equipo. Si cambias resolución, solo actualiza `reference_size` — las cajas se reescalan solas.

@@ -25,6 +25,7 @@ import os
 import re
 import sys
 import time
+import urllib.parse
 import urllib.request
 from datetime import datetime
 from pathlib import Path
@@ -136,12 +137,19 @@ def grab_isapi_snapshot(cfg: dict) -> np.ndarray | None:
 
 
 def inject_credentials(url: str, user: str, password: str) -> str:
-    """Inserta usuario:contrasena en la URL RTSP sin dejarlos en disco."""
+    """
+    Inserta usuario:contrasena en la URL RTSP sin dejarlos en disco.
+
+    Se codifican con quote() para que una contrasena con @ : / # no rompa
+    la URL (las de las camaras Hikvision suelen llevar simbolos).
+    """
     host_part = url.split("://", 1)[-1].split("/", 1)[0]
     if "@" in host_part:
         return url
     scheme, rest = url.split("://", 1)
-    return f"{scheme}://{user}:{password}@{rest}"
+    u = urllib.parse.quote(user, safe="")
+    p = urllib.parse.quote(password, safe="")
+    return f"{scheme}://{u}:{p}@{rest}"
 
 
 def grab_rtsp_frame(cfg: dict) -> np.ndarray | None:
@@ -186,7 +194,10 @@ def grab_burst(cfg: dict) -> list[np.ndarray]:
         return frames
 
     frame = grab_rtsp_frame(cfg)
-    return [frame] if frame is not None else []
+    if frame is not None:
+        return [frame]
+    # Si RTSP tambien fallo, al menos usar el unico fotograma ISAPI.
+    return frames
 
 
 # ----------------------------- Analisis -----------------------------
@@ -263,18 +274,16 @@ def classify(opacity: float, cfg: dict) -> tuple[str, str, int]:
     else:
         code, label = "DARK", "Humo oscuro / combustion incompleta"
 
-    if opacity >= 80:
-        ringelmann = 4
-    elif opacity >= 60:
-        ringelmann = 3
-    elif opacity >= 40:
-        ringelmann = 2
-    elif opacity >= 10:
-        ringelmann = 1
-    else:
-        ringelmann = 0
+    return code, label, ringelmann_number(opacity)
 
-    return code, label, ringelmann
+
+def ringelmann_number(opacity: float) -> int:
+    """
+    Numero Ringelmann por la escala estandar: cada grado equivale a 20%
+    de opacidad (1 = 20%, 2 = 40%, 3 = 60%, 4 = 80%, 5 = 100%).
+    Se redondea al grado mas cercano, como se hace en la lectura visual.
+    """
+    return int(min(5, max(0, round(opacity / 20.0))))
 
 
 def raw_signal(img: np.ndarray, cfg: dict) -> float | None:
@@ -317,11 +326,13 @@ def analyze(frames: list[np.ndarray], cfg: dict) -> dict | None:
     ref_b_box = scale_box(cfg["zones"]["reference_b"], w, h, ref_size)
 
     if is_night(frames[-1], cfg):
+        # De noche NO se reporta "despejado": no se sabe. Un sistema de
+        # alertas debe poder distinguir "sin humo" de "sin medicion".
         return {
-            "code": "CLEAR",
-            "label": "Despejado (modo nocturno)",
-            "opacity": 0.0,
-            "ringelmann": 0,
+            "code": "NIGHT",
+            "label": "Sin medicion (modo nocturno)",
+            "opacity": None,
+            "ringelmann": None,
             "night": True,
             "frames_used": len(frames),
             "annotated": frames[-1],
@@ -457,8 +468,9 @@ def save_results(result: dict, cfg: dict, prefix: str = "smoke") -> dict:
 
 def print_result(result: dict, saved: dict | None = None) -> None:
     print(f"  Estado      : {result['label']}  [{result['code']}]")
-    print(f"  Opacidad    : {result['opacity']:.1f}%")
-    print(f"  Ringelmann  : {result['ringelmann']}")
+    if result.get("opacity") is not None:
+        print(f"  Opacidad    : {result['opacity']:.1f}%")
+        print(f"  Ringelmann  : {result['ringelmann']}")
     if result.get("night"):
         print("  Nota        : imagen nocturna, analisis de contraste no aplicable")
     else:
@@ -524,7 +536,10 @@ def main() -> int:
         return 0
 
     if args.snapshot:
-        frame = grab_isapi_snapshot(cfg) or grab_rtsp_frame(cfg)
+        # No usar `a or b`: un ndarray no tiene valor de verdad y truena.
+        frame = grab_isapi_snapshot(cfg)
+        if frame is None:
+            frame = grab_rtsp_frame(cfg)
         if frame is None:
             print("No se pudo capturar un fotograma.", file=sys.stderr)
             return 1
