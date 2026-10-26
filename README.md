@@ -185,7 +185,7 @@ Cada medición guarda en `captures/`:
 
 Las pruebas automatizadas trabajan con imágenes locales: **nunca abren una conexión real**. No cubren el diálogo con la cámara ni la captura en vivo.
 
-La captura por ISAPI y por RTSP está comprobada funcionando correctamente contra una cámara Hikvision real, **pero puede variar si se instala en otro sistema operativo**, con otro modelo o firmware, otro códec o en otra red. OpenCV y el cliente HTTP se comportan distinto entre Linux, Windows y macOS.
+La captura por ISAPI y por RTSP funciona correctamente en las pruebas realizadas, **pero conectarse a una cámara real es precisamente el paso que las pruebas no cubren**, y puede variar si se instala en otro sistema operativo, con otro modelo o firmware, otro códec o en otra red. OpenCV y el cliente HTTP se comportan distinto entre Linux, Windows y macOS.
 
 Antes de confiar en la alerta:
 
@@ -219,4 +219,4 @@ python smoke_detect.py --config config.json --measure
 
 Not a certified opacity monitor — it's early-warning telemetry for continuous monitoring.
 
-> **Test it once against your camera before relying on it.** The automated tests run on local images and never open a real connection. ISAPI and RTSP capture are verified working against a real Hikvision camera, but behaviour may differ on another operating system, model, firmware, codec or network. Take a snapshot, draw your zones on that real frame, and run `--calibrate` first — the default classifier produces false positives without calibration.
+> **Test it once against your camera before relying on it.** The automated tests run on local images and never open a real connection, so connecting to an actual camera is exactly the step they do not cover. ISAPI and RTSP capture work correctly in the tests performed, but behaviour may differ on another operating system, model, firmware, codec or network. Take a snapshot, draw your zones on that real frame, and run `--calibrate` first — the default classifier produces false positives without calibration.
